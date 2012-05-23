@@ -2,11 +2,11 @@
  * G.js
  * A small simple javascript lib to help you define and require Module.
  * Not exactly follow the CommonJS AMDjs.
- * @author: mzhou
- * @version: 0.3.0
- * @log: 0.1
- *       0.2 rebuild the code and api, add nameToUrl rules
- *       0.3 auto find the relativeUrl, add preload support
+ * @author mzhou
+ * @version 0.3.0
+ * @log 0.1
+ *      0.2 rebuild the code and api, add nameToUrl rules
+ *      0.3 auto find the relativeUrl, add preload support
  */
 
 /*jshint undef:true, browser:true, noarg:true, curly:true, regexp:true, newcap:true, trailing:true, noempty:true, regexp:false, strict:true, evil:true, funcscope:true, iterator:true, loopfunc:true, multistr:true, boss:true, eqnull:true, eqeqeq:true, undef:true */
@@ -41,9 +41,9 @@
         isPreloaded = false,
         preloadCallbacks,
         readyStates = { // script's readyStates
-            complete: 1,
-            loaded: 1,
-            notDefined: 1
+            'complete': 1,
+            'loaded': 1,
+            'undefined': 1
             // for non-ie
         },
         toString = Object.prototype.toString;
@@ -194,7 +194,7 @@
         var tmp = wrap ? deps : notDefined;
         wrap = wrap || deps;
         deps = tmp;
-        if (toString.call(wrap) !== '[Object Function]') {
+        if (toString.call(wrap) !== '[object Function]') {
             module[name] = wrap;
         } else {
             loaded[name] = {
@@ -387,7 +387,7 @@
      * @returns {array}
      */
     function require( reqs, callback) {
-        reqs = toString.call(reqs) === '[Object Array]' ? reqs : [reqs];
+        reqs = toString.call(reqs) === '[object Array]' ? reqs : [reqs];
 
         // if no callback, then use requireLoaded
         if (!callback) {
@@ -413,7 +413,7 @@
      * @returns {array}
      */
     G.req = function req(reqs, callback) {
-        if (  isPreloaded || !config.preload || !config.preload.length ) {
+        if ( isPreloaded || !config.preload || !config.preload.length ) {
             require(reqs, callback);
         } else {
             if ( !isPreloading ) {
@@ -427,7 +427,7 @@
                         preloadCallbacks[i]();
                     }
                 });
-            }            
+            }
             preloadCallbacks.push(function() {
                 require(reqs, callback);
             });

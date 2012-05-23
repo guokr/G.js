@@ -6,5 +6,11 @@
 </head>
 <body>
 	<script src="../G.js"></script>
+    <script>
+        G.req('test/b',function(b) {
+            b.set('test');
+            console.log(b.get());
+        });
+    </script>
 </body>
 </html>
