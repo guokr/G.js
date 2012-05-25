@@ -20,8 +20,30 @@
     }
     host.G = {};
 
+    /**
+     * Get the url of this scripts
+     */
+
+    function getScriptsUrl() {
+        if (host.GJS_URL) {
+            return host.GJS_URL;
+        }
+
+        var scripts = document.getElementsByTagName('script'),
+            node = scripts[scripts.length - 1],
+            loaderScriptUrl;
+
+        loaderScriptUrl = node.hasAttribute ?
+        // non-IE6/7
+        node.src :
+        // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
+        node.getAttribute('src', 4);
+
+        loaderScriptUrl = loaderScriptUrl.replace(/\/[^\/]*$/, '') + '/';
+        return loaderScriptUrl;
+    }
+
     var doc = host.document,
-        scripts = document.getElementsByTagName('script'),
         loading = {},
         // loading modules, or it's dependency is loading
         waiting = {},
@@ -33,8 +55,8 @@
         config = {
             // url prefix for which module name
             url: getScriptsUrl() || '/js/',
-            version: host.GJS_VERSION ? '?v' + host.GJS_VERSION : ''
-            // preload: [],
+            version: host.GJS_VERSION ? '?v' + host.GJS_VERSION : '',
+            preload: host.GJS_PRELOAD || []
             // libUrl: '/lib/'
         },
         isPreloading = false,
@@ -57,29 +79,6 @@
     //      /index ==> /index.js
     //      http://www.guokr.com/js/h.js ==> http://www.guokr.com/js/h.js
     config.libUrl = config.url + (host.GJS_LIB_URL || 'lib/');
-
-
-    /**
-     * Get the url of this scripts
-     */
-
-    function getScriptsUrl() {
-        if (host.GJS_URL) {
-            return host.GJS_URL;
-        }
-
-        var node = scripts[scripts.length - 1],
-            loaderScriptUrl;
-
-        loaderScriptUrl = node.hasAttribute ?
-        // non-IE6/7
-        node.src :
-        // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
-        node.getAttribute('src', 4);
-
-        loaderScriptUrl = loaderScriptUrl.replace(/\/[^\/]*$/, '') + '/';
-        return loaderScriptUrl;
-    }
 
 
     /**
@@ -413,7 +412,7 @@
      * @returns {array}
      */
     G.req = function req(reqs, callback) {
-        if ( isPreloaded || !config.preload || !config.preload.length ) {
+        if ( isPreloaded || !config.preload.length ) {
             require(reqs, callback);
         } else {
             if ( !isPreloading ) {
