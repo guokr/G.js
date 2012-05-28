@@ -67,7 +67,14 @@
             'undefined': 1
             // for non-ie
         },
-        toString = Object.prototype.toString;
+        toString = Object.prototype.toString,
+        absoluteReg = /^(\/|http:\/\/)/,
+        // validate: http:// or /
+        relativeReg = /^\.{1,2}?\//,
+        // validate: ./ or ../
+        jsSuffixReg = /\.js(?:(?:\?|#)[\w\W]*)?$/,
+        // validate: .js or .js?v=1 or .js#test
+        jsSuffix = '.js' + config.version;
     // url prefix for lib module
     // if url is '/js/' and libUrl is 'lib'
     // then
@@ -125,10 +132,9 @@
      */
 
     function nameToUrl(name) {
-        var jsSuffix = '.js' + config.version,
-            firstLetter = name.slice(0, 1),
-            isAbsolute = firstLetter === '/',
-            isRelative = firstLetter === '.';
+        var firstLetter = name.slice(0, 1),
+            isAbsolute = absoluteReg.test(name),
+            isRelative = relativeReg.test(name);
         if (isRelative) {
             name = config.url + name.slice(1);
         } else if (!isAbsolute) {
@@ -136,7 +142,7 @@
         }
 
         name = realpath(name);
-        if (name.split(-3) !== jsSuffix) {
+        if (!jsSuffixReg.test(name)) {
             name += jsSuffix;
         }
         return name;
@@ -394,7 +400,7 @@
         // if no callback, then use requireSync
         if (!callback) {
             if (reqs.length === 1) {
-                return requireSync(reqs);
+                return requireSync(reqs[0]);
             } else {
                 var i = 0,
                     len = reqs.length,
@@ -416,7 +422,8 @@
      */
     G.req = function req(reqs, callback) {
         if (isPreloaded || !config.preload.length) {
-            require(reqs, callback);
+            return require(reqs, callback);
+            // return when callback === undefined
         } else {
             if (!isPreloading) {
                 isPreloading = true;

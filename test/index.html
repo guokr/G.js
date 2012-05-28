@@ -5,12 +5,200 @@
 	<title>test G.js</title>
 </head>
 <body>
+    <link rel="stylesheet" type="text/css" href="jasmine/jasmine.css">
+    <script type="text/javascript" src="jasmine/jasmine.js"></script>
+    <script type="text/javascript" src="jasmine/jasmine-html.js"></script>
 	<script src="../G.js"></script>
     <script>
-        G.req('test/b',function(b) {
-            b.set('test');
-            console.log(b.get());
+        describe('G.js:', function() {
+
+            beforeEach(function() {
+                jasmine.Clock.useMock();
+            });
+
+            it('normal req async: test/b', function() {
+                var flag = false,
+                    b;
+                runs(function() {
+                    G.req('test/b',function(bb) {
+                        b = bb;
+                        flag = true;
+                    });
+                });
+    
+                waitsFor(function() {
+                    return flag;
+                }, 'Timeout', 10000);
+
+                runs(function() {
+                    b.set('test');
+                    expect(b.get()).toEqual('test');
+                });
+
+            });
+
+            it('normal req async: [test/b, a]', function() {
+                var flag = false,
+                    a,
+                    b;
+                runs(function() {
+                    G.req(['test/b', 'a'], function( bb, aa ) {
+                        b = bb;
+                        a = aa;
+                        flag = true;
+                    });
+                });
+    
+                waitsFor(function() {
+                    return flag;
+                }, 'Timeout', 10000);
+
+                runs(function() {
+                    spyOn(a, 'set').andCallThrough();
+                    b.set('test');
+                    expect(b.get()).toEqual('test');
+                    expect(a.get()).toEqual('test');
+                    a.set('test2');
+                    expect(b.get()).toEqual('test2');
+                    expect(a.get()).toEqual('test2');
+                    expect(a.set).toHaveBeenCalledWith('test');
+                    expect(a.set).toHaveBeenCalledWith('test2');
+                    expect(a.set.calls.length).toEqual(2);
+                });
+            });
+
+            it('normal req async: [./test/test, a, b], test return undefined', function() {
+                var flag = false,
+                    test,
+                    a,
+                    b;
+                runs(function() {
+                    G.req(['./test/test', 'a', 'b'], function( testt, aa, bb ) {
+                        b = bb;
+                        a = aa;
+                        test = testt;
+                        flag = true;
+                    });
+                });
+    
+                waitsFor(function() {
+                    return flag;
+                }, 'Timeout', 10000);
+
+                runs(function() {
+                    expect(test).toBeUndefined();
+                    expect(b.get()).toEqual('testb');
+                    expect(a.get()).toEqual('testa');
+                });
+            });
+
+            it('normal req async: [http://mzhou.me/demo/absolute.js], test return null', function() {
+                var flag = false,
+                    absolute;
+                runs(function() {
+                    G.req(['http://mzhou.me/demo/absolute.js'], function( a ) {
+                        absolute = a;
+                        flag = true;
+                    });
+                });
+    
+                waitsFor(function() {
+                    return flag;
+                }, 'Timeout', 100000);
+
+                runs(function() {
+                    expect(absolute).toBeNull();
+                });
+            });
+
+            it('require module sync', function() {
+                var flag = false,
+                    v;
+                runs(function() {
+                    v = G.req(['a','b'], function() {
+                        flag = true;
+                    });
+                });
+    
+                waitsFor(function() {
+                    return flag;
+                }, 'Timeout', 10000);
+
+                runs(function() {
+                    expect(v).toBeUndefined();
+                    var b = G.req('b');
+                    expect(b).not.toBeUndefined();
+                    b.set('testb');
+                    expect(b.get()).toEqual('testb');
+                    var a = G.req('a');
+                    expect(a).not.toBeUndefined();
+                    a.set('testa');
+                    expect(a.get()).toEqual('testa');
+                    var array = G.req(['a','b']);
+                    expect(a === array[0]).toEqual(true);
+                    expect(b === array[1]).toEqual(true);
+                });
+            });
+
+            it('require single module async with no callback', function() {
+                var v;
+                runs(function() {
+                    v = G.req('b', true);
+                });
+    
+                waitsFor(function() {
+                    return !!G.req('b');
+                }, 'Timeout', 10000);
+
+                runs(function() {
+                    expect(v).toBeUndefined();
+                    var b = G.req('b');
+                    expect(b).not.toBeUndefined();
+                    b.set('test');
+                    expect(b.get()).toEqual('test');
+                });
+            });
+
+            it('require multi module async with no callback', function() {
+                runs(function() {
+                    expect(G.req(['a','b'], true)).toBeUndefined();
+                });
+
+                waitsFor(function() {
+                    return !!G.req('b') && !!G.req('a');
+                }, 'Timeout', 10000);
+
+                runs(function() {
+                    var b = G.req('b');
+                    expect(b).not.toBeUndefined();
+                    b.set('testb');
+                    expect(b.get()).toEqual('testb');
+                    var a = G.req('a');
+                    expect(a).not.toBeUndefined();
+                    a.set('testa');
+                    expect(a.get()).toEqual('testa');
+                });
+            });
         });
+
+        // report
+        var jasmineEnv = jasmine.getEnv();
+        jasmineEnv.updateInterval = 1000;
+        var htmlReporter = new jasmine.HtmlReporter();
+        jasmineEnv.addReporter(htmlReporter);
+        jasmineEnv.specFilter = function(spec) {
+            return htmlReporter.specFilter(spec);
+        };
+        var currentWindowOnload = window.onload;
+        window.onload = function() {
+            if (currentWindowOnload) {
+              currentWindowOnload();
+            }
+            execJasmine();
+        };
+        function execJasmine() {
+            jasmineEnv.execute();
+        }
     </script>
 </body>
 </html>
