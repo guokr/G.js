@@ -10,7 +10,7 @@
  */
 
 /*jshint undef:true, browser:true, noarg:true, curly:true, regexp:true, newcap:true, trailing:true, noempty:true, regexp:false, strict:true, evil:true, funcscope:true, iterator:true, loopfunc:true, multistr:true, boss:true, eqnull:true, eqeqeq:true, undef:true */
-/*global G:true */
+/*global G:true, console:false */
 
 (function(host, notDefined) {
     'use strict';
@@ -61,8 +61,7 @@
         },
         isPreloading = false,
         isPreloaded = false,
-        preloadCallbacks,
-        readyStates = { // script's readyStates
+        preloadCallbacks, readyStates = { // script's readyStates
             'complete': 1,
             'loaded': 1,
             'undefined': 1
@@ -333,7 +332,7 @@
                 depModules = [];
             if (depNames) {
                 for (var i = 0, len = depNames.length; i < len; i++) {
-                    depModules.push(requireLoaded(depNames[i]));
+                    depModules.push(requireSync(depNames[i]));
                 }
             }
             module[name] = mod.wrap.apply(null, depModules);
@@ -355,7 +354,9 @@
         // single module name
         if (reqs.length === 1) {
             loadMod(reqs[0], function(name) {
-                callback.call(null, module[name]);
+                if (callback.call) {
+                    callback.call(null, module[name]);
+                }
             });
             // multi module name
         } else {
@@ -369,7 +370,9 @@
                     }
                     var reqsModules = isModsExed(reqs);
                     if (reqsModules) {
-                        callback.apply(null, reqsModules);
+                        if (callback.apply) {
+                            callback.apply(null, reqsModules);
+                        }
                         exed = true;
                     }
                 };
@@ -385,19 +388,19 @@
      * @param {function} callback
      * @returns {array}
      */
-    function require( reqs, callback) {
+    function require(reqs, callback) {
         reqs = toString.call(reqs) === '[object Array]' ? reqs : [reqs];
 
-        // if no callback, then use requireLoaded
+        // if no callback, then use requireSync
         if (!callback) {
             if (reqs.length === 1) {
-                return requireLoaded(reqs);
+                return requireSync(reqs);
             } else {
                 var i = 0,
                     len = reqs.length,
                     reqsModules = [];
                 for (; i < len; i++) {
-                    reqsModules.push(requireLoaded(reqs[i]));
+                    reqsModules.push(requireSync(reqs[i]));
                 }
                 return reqsModules;
             }
@@ -412,17 +415,17 @@
      * @returns {array}
      */
     G.req = function req(reqs, callback) {
-        if ( isPreloaded || !config.preload.length ) {
+        if (isPreloaded || !config.preload.length) {
             require(reqs, callback);
         } else {
-            if ( !isPreloading ) {
+            if (!isPreloading) {
                 isPreloading = true;
                 require(config.preload, function() {
                     isPreloaded = true;
                     isPreloading = false;
                     var i = 0,
                         l = config.preload.length;
-                    for(; i < l; i++) {
+                    for (; i < l; i++) {
                         preloadCallbacks[i]();
                     }
                 });
