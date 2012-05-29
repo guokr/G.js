@@ -179,6 +179,30 @@
                     expect(a.get()).toEqual('testa');
                 });
             });
+
+
+            it('require /lib/test/b to test/b and require test/../a to a', function() {
+                var flag = false,
+                    a,
+                    b;
+                runs(function() {
+                    G.req(['/lib/test/b', 'test/../a'],function(bb, aa) {
+                        a = aa;
+                        b = bb;
+                        flag = true;
+                    });
+                });
+    
+                waitsFor(function() {
+                    return flag;
+                }, 'Timeout', 10000);
+
+                runs(function() {
+                    b.set('test');
+                    expect(b.get()).toEqual('test');
+                    expect(a.get()).toEqual('test');
+                });
+            });
         });
 
         // report

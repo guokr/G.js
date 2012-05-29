@@ -26,7 +26,11 @@
 
     function getScriptsUrl() {
         if (host.GJS_URL) {
-            return host.GJS_URL;
+            if (host.GJS_URL.charAt(0) === '/' && host.GJS_URL.charAt(1) !== '/') {
+                return location.protocol + '//' + location.host + host.GJS_URL;
+            } else {
+                return host.GJS_URL;
+            }
         }
 
         var scripts = document.getElementsByTagName('script'),
@@ -69,24 +73,40 @@
             // for non-ie
         },
         toString = Object.prototype.toString,
-        absoluteReg = /^(\/|http:\/\/)/,
+        absoluteReg = /^(?:\/|https?:\/\/|file:\/\/)/,
         // validate: http:// or /
         relativeReg = /^\.{1,2}?\//,
         // validate: ./ or ../
         jsSuffixReg = /\.js(?:(?:\?|#)[\w\W]*)?$/,
         // validate: .js or .js?v=1 or .js#test
         jsSuffix = '.js' + config.version;
-    // url prefix for lib module
-    // if url is '/js/' and libUrl is 'lib'
-    // then
-    //      ./jQuery ==> /js/jQuery.js
-    //      share ==> /js/lib/share.js
-    //      ./post/comment ==> /js/post/comment.js
-    //      ../other ==> /other.js  (!!! not recommend)
-    //      /index ==> /index.js
-    //      http://www.guokr.com/js/h.js ==> http://www.guokr.com/js/h.js
-    config.libUrl = config.url + (host.GJS_LIB_URL || 'lib/');
 
+    function init() {
+        // url prefix for lib module
+        // if url is '/js/' and libUrl is 'lib'
+        // then
+        //      ./jQuery ==> /js/jQuery.js
+        //      share ==> /js/lib/share.js
+        //      ./post/comment ==> /js/post/comment.js
+        //      ../other ==> /other.js  (!!! not recommend)
+        //      /index ==> /index.js
+        //      http://www.guokr.com/js/h.js ==> http://www.guokr.com/js/h.js
+        config.libUrl = config.url + (host.GJS_LIB_URL || 'lib/');
+        config.hostUrl = (function() {
+            var httpReg = /^(https?:\/\/[^\/]*)\/?.*$/,
+                fileReg = /^(file:\/\/.*)\/.*$/,
+                tmp;
+            tmp = httpReg.exec(config.url);
+            if (tmp) {
+                return tmp[1];
+            }
+            tmp = fileReg.exec(config.url);
+            if (tmp) {
+                return tmp[1];
+            }
+            G.log('Can\'t get hostUrl!');
+        })();
+    }
 
     /**
      * Canonicalizes a path.
@@ -133,11 +153,14 @@
      */
 
     function nameToUrl(name) {
-        var firstLetter = name.slice(0, 1);
+        var firstLetter = name.slice(0, 1),
+            r;
         if (relativeReg.test(name)) {
             name = config.url + name.slice(1);
-        } else if (!absoluteReg.test(name)) {
+        } else if (!(r = absoluteReg.exec(name))) {
             name = config.libUrl + name;
+        } else if (r[0] === '/') {
+            name = config.hostUrl + name;
         }
 
         name = realpath(name);
@@ -194,12 +217,24 @@
         if ((name in module) || (name in loaded)) {
             return;
         }
-        var tmp = wrap ? deps : notDefined;
+        var tmp = wrap ? deps : notDefined,
+            i, l;
         wrap = wrap || deps;
         deps = tmp;
+
+        // change name to url
+        name = nameToUrl(name);
+
         if (toString.call(wrap) !== '[object Function]') {
             module[name] = wrap;
         } else {
+            // change dependencies name to url
+            if (deps) {
+                for (i = 0, l = deps.length; i < l; i++) {
+                    deps[i] = nameToUrl(deps[i]);
+                }
+            }
+
             loaded[name] = {
                 name: name,
                 deps: deps,
@@ -328,6 +363,7 @@
      */
 
     function requireSync(name) {
+        name = nameToUrl(name);
         if (name in module) {
             return module[name];
         }
@@ -358,7 +394,7 @@
     function requireAsync(reqs, callback) {
         // single module name
         if (reqs.length === 1) {
-            loadMod(reqs[0], function(name) {
+            loadMod(nameToUrl(reqs[0]), function(name) {
                 if (callback.call) {
                     callback.call(null, module[name]);
                 }
@@ -381,7 +417,11 @@
                         exed = true;
                     }
                 };
+            // for IE cache loading bug, must seperate nameToUrl and loadMod!
             for (; i < len; i++) {
+                reqs[i] = nameToUrl(reqs[i]);
+            }
+            for (i = 0; i < len; i++) {
                 loadMod(reqs[i], cb);
             }
         }
@@ -455,4 +495,5 @@
         G.log = function() {};
     }
 
+    init();
 })(window);
