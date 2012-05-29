@@ -53,6 +53,19 @@
                 expect(G.isFun(a)).toEqual(false);
             });
 
+            it('G.ua', function() {
+                var s ='';
+                s += 'isIE:' + G.ua.isIE + '\n';
+                s += 'isIE6:' + G.ua.isIE6 + '\n';
+                s += 'isIE7:' + G.ua.isIE7 + '\n';
+                s += 'isIE8:' + G.ua.isIE8 + '\n';
+                s += 'isIE9:' + G.ua.isIE9 + '\n';
+                s += 'isOpera:' + G.ua.isOpera + '\n';
+                s += 'isIpad:' + G.ua.isIpad + '\n';
+                s += 'isIphone:' + G.ua.isIphone + '\n';
+                alert(s);
+            });
+
             it('G.each', function() {
                 var a = ['a','b','c'];
                 delete a[2];
