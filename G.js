@@ -153,8 +153,7 @@
      */
 
     function nameToUrl(name) {
-        var firstLetter = name.slice(0, 1),
-            r;
+        var r;
         if (relativeReg.test(name)) {
             name = config.url + name.slice(1);
         } else if (!(r = absoluteReg.exec(name))) {
