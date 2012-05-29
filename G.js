@@ -61,7 +61,8 @@
         },
         isPreloading = false,
         isPreloaded = false,
-        preloadCallbacks, readyStates = { // script's readyStates
+        preloadCallbacks = [],
+        readyStates = { // script's readyStates
             'complete': 1,
             'loaded': 1,
             'undefined': 1
@@ -433,6 +434,7 @@
                     for (; i < l; i++) {
                         preloadCallbacks[i]();
                     }
+                    preloadCallbacks = notDefined;
                 });
             }
             preloadCallbacks.push(function() {
