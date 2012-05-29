@@ -10,7 +10,7 @@
  */
 
 /*jshint undef:true, browser:true, noarg:true, curly:true, regexp:true, newcap:true, trailing:true, noempty:true, regexp:false, strict:true, evil:true, funcscope:true, iterator:true, loopfunc:true, multistr:true, boss:true, eqnull:true, eqeqeq:true, undef:true */
-/*global G:true, console:false */
+/*global G:true, console:false, GJS_VERSION:false, GJS_PRELOAD:false, GJS_URL:false, GJS_LIB_URL:false */
 
 (function(host, notDefined) {
     'use strict';
@@ -132,12 +132,10 @@
      */
 
     function nameToUrl(name) {
-        var firstLetter = name.slice(0, 1),
-            isAbsolute = absoluteReg.test(name),
-            isRelative = relativeReg.test(name);
-        if (isRelative) {
+        var firstLetter = name.slice(0, 1);
+        if (relativeReg.test(name)) {
             name = config.url + name.slice(1);
-        } else if (!isAbsolute) {
+        } else if (!absoluteReg.test(name)) {
             name = config.libUrl + name;
         }
 

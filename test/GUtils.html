@@ -1,0 +1,211 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	<title>test G.js</title>
+</head>
+<body>
+    <link rel="stylesheet" type="text/css" href="jasmine/jasmine.css">
+    <script type="text/javascript" src="jasmine/jasmine.js"></script>
+    <script type="text/javascript" src="jasmine/jasmine-html.js"></script>
+	<script src="../G.js"></script>
+    <script src="../lib/GUtils.js"></script>
+    <script src="../lib/jQuery.js"></script>
+    <script>
+        G.req('GUtils');
+        describe('GUtils:', function() {
+
+            beforeEach(function() {
+                jasmine.Clock.useMock();
+            });
+
+            it('G.format:', function() {
+
+                expect(G.format( '{1} name is {2}!', { 1: 'Her', 2: 'Mo' })).toEqual('Her name is Mo!');
+                expect(G.format( '{v} is good!', 'JavaScript' )).toEqual('JavaScript is good!');
+                expect(G.format( '{s} is good!', '{s}', 'JavaScript' )).toEqual('JavaScript is good!');
+                expect(G.format( '<1> name is <2>!', { 1: 'Her', 2: 'Mo' }, /<([^<>]+)>/g)).toEqual('Her name is Mo!');
+
+            });
+
+            it('G.type', function() {
+                expect(G.type({})).toEqual('object');
+                expect(G.type(1)).toEqual('number');
+                expect(G.type(null)).toEqual('null');
+                expect(G.type(undefined)).toEqual('undefined');
+                expect(G.type(true)).toEqual('boolean');
+                expect(G.type(false)).toEqual('boolean');
+                expect(G.type(function(){})).toEqual('function');
+                expect(G.type('string')).toEqual('string');
+                expect(G.type([])).toEqual('array');
+                expect(G.type(new Date())).toEqual('date');
+                expect(G.type(/s/)).toEqual('regexp');
+                expect(G.isHtml('<p></p>')).toEqual(true);
+                expect(G.isHtml('<p>s</p>')).toEqual(true);
+                expect(G.isHtml('1234')).toEqual(false);
+                expect(G.isNumber('1234')).toEqual(false);
+                expect(G.isNumber(1234)).toEqual(true);
+                expect(G.isArray([])).toEqual(true);
+                var s = {length: 0};
+                expect(G.isArray(s)).toEqual(false);
+                expect(G.isFun(function(){})).toEqual(true);
+                var a = {call:function(){}, apply:function(){}};
+                expect(G.isFun(a)).toEqual(false);
+            });
+
+            it('G.each', function() {
+                var a = ['a','b','c'];
+                delete a[2];
+                G.each( a, function( v, i, aa ) {
+                    if ( i == 1) {
+                        expect(v).toEqual('b');
+                    } else {
+                        expect(v).toEqual('a');
+                    }
+                    expect(a).toEqual(aa);
+                    expect(this).toEqual('this');
+                }, 'this');
+
+                var o = {a:0,b:1,c:2};
+                delete o.c;
+                G.each( o, function( v, i, oo ) {
+                    if ( v == 1) {
+                        expect(i).toEqual('b');
+                    } else {
+                        expect(i).toEqual('a');
+                    }
+                    expect(o).toEqual(oo);
+                    expect(this).toEqual('this');
+                }, 'this');
+            });
+
+            it('G.filter', function() {
+                var v = [12, 5, 8, 130, 44];
+                var vv = G.filter(v, function( e, i, array ) {
+                    expect(i).toEqual(jasmine.any(Number));
+                    expect(array).toEqual(v);
+                    expect(this).toEqual('this');
+                    return e >= 10;
+                }, 'this');
+                expect(vv[0]).toBe(12);
+                expect(vv[1]).toBe(130);
+                expect(vv[2]).toBe(44);
+                expect(v[0]).toBe(12);
+                expect(v[1]).toBe(5);
+                expect(v[2]).toBe(8);
+                expect(v[3]).toBe(130);
+                expect(v[4]).toBe(44);
+            });
+
+            it('G.every', function() {
+                function isBigEnough(e, i, array) {
+                    expect(i).toEqual(jasmine.any(Number));
+                    expect(array).toEqual(v);
+                    expect(this).toEqual('this');
+                    return (e >= 10);
+                }
+                function isBigEnough2(e, i, array) {
+                    expect(i).toEqual(jasmine.any(Number));
+                    expect(array).toEqual(v2);
+                    expect(this).toEqual('this');
+                    return (e >= 10);
+                }
+                var v = [12, 5, 8, 130, 44],
+                    v2 = [12,130,44],
+                    vv = G.every(v, isBigEnough, 'this'),
+                    vv2 = G.every(v2, isBigEnough2, 'this');
+                expect(vv).toEqual(false);
+                expect(vv2).toEqual(true);
+            });
+
+            it('G.some', function() {
+                function isBigEnough(e, i, array) {
+                    expect(i).toEqual(jasmine.any(Number));
+                    expect(array).toEqual(v);
+                    expect(this).toEqual('this');
+                    return (e >= 10);
+                }
+                function isBigEnough2(e, i, array) {
+                    expect(i).toEqual(jasmine.any(Number));
+                    expect(array).toEqual(v2);
+                    expect(this).toEqual('this');
+                    return (e >= 10);
+                }
+                var v = [12, 5, 8, 130, 44],
+                    v2 = [2,0,-1],
+                    vv = G.some(v, isBigEnough, 'this'),
+                    vv2 = G.some(v2, isBigEnough2, 'this');
+                expect(vv).toEqual(true);
+                expect(vv2).toEqual(false);
+            });
+
+            it('G.map', function() {
+                var v = [1,2],
+                    v2 = G.map(v, function(e, i, array) {
+                        expect(i).toEqual(jasmine.any(Number));
+                        expect(array).toEqual(v);
+                        expect(this).toEqual('this');
+                        return e+1;
+                    }, 'this');
+                expect(v[0]).toEqual(1);
+                expect(v[1]).toEqual(2);
+                expect(v2[0]).toEqual(2);
+                expect(v2[1]).toEqual(3);
+            });
+
+            it('string.trim', function() {
+                var s = '  asdasd    ',
+                    s1 = ' asdasd',
+                    s2 = 'asdasd ',
+                    original = 'asdasd';
+                expect(s.trim()).toEqual(original);
+                expect(s1.trim()).toEqual(original);
+                expect(s2.trim()).toEqual(original);
+            });
+
+            it('Object.create', function() {
+                var o = {
+                    get: function() {return this.p;},
+                    set: function(p) { this.p = p;}
+                };
+                var n = Object.create(o);
+                o.set(1);
+                expect(o.get()).toEqual(1);
+                expect(n.get()).toEqual(1);
+                n.set(2);
+                expect(o.get()).toEqual(1);
+                expect(n.get()).toEqual(2);
+            });
+
+            it('Array.indexOf', function() {
+                var a = [0,1,2,3];
+                expect(a.indexOf(0)).toEqual(0);
+                expect(a.indexOf(1)).toEqual(1);
+                expect(a.indexOf(2)).toEqual(2);
+                expect(a.indexOf(3)).toEqual(3);
+                expect(a.indexOf(4)).toEqual(-1);
+                expect(a.indexOf(-1)).toEqual(-1);
+            });
+        });
+
+        // report
+        var jasmineEnv = jasmine.getEnv();
+        jasmineEnv.updateInterval = 1000;
+        var htmlReporter = new jasmine.HtmlReporter();
+        jasmineEnv.addReporter(htmlReporter);
+        jasmineEnv.specFilter = function(spec) {
+            return htmlReporter.specFilter(spec);
+        };
+        var currentWindowOnload = window.onload;
+        window.onload = function() {
+            if (currentWindowOnload) {
+              currentWindowOnload();
+            }
+            execJasmine();
+        };
+        function execJasmine() {
+            jasmineEnv.execute();
+        }
+    </script>
+</body>
+</html>
