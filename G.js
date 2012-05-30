@@ -7,6 +7,8 @@
  * @log 0.1
  *      0.2 rebuild the code and api, add nameToUrl rules
  *      0.3 auto find the relativeUrl, add preload support
+ *      0.4 fix module name resolved bug
+ *      0.5 add relative deps name support
  */
 
 /*jshint undef:true, browser:true, noarg:true, curly:true, regexp:true, newcap:true, trailing:true, noempty:true, regexp:false, strict:true, evil:true, funcscope:true, iterator:true, loopfunc:true, multistr:true, boss:true, eqnull:true, eqeqeq:true, undef:true */
@@ -20,33 +22,6 @@
     }
     host.G = {};
 
-    /**
-     * Get the url of this scripts
-     */
-
-    function getScriptsUrl() {
-        if (host.GJS_URL) {
-            if (host.GJS_URL.charAt(0) === '/' && host.GJS_URL.charAt(1) !== '/') {
-                return location.protocol + '//' + location.host + host.GJS_URL;
-            } else {
-                return host.GJS_URL;
-            }
-        }
-
-        var scripts = document.getElementsByTagName('script'),
-            node = scripts[scripts.length - 1],
-            loaderScriptUrl;
-
-        loaderScriptUrl = node.hasAttribute ?
-        // non-IE6/7
-        node.src :
-        // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
-        node.getAttribute('src', 4);
-
-        loaderScriptUrl = loaderScriptUrl.replace(/\/[^\/]*$/, '') + '/';
-        return loaderScriptUrl;
-    }
-
     var doc = host.document,
         loading = {},
         // loading modules, or it's dependency is loading
@@ -57,8 +32,6 @@
         module = {},
         // executed module for cache
         config = {
-            // url prefix for which module name
-            url: getScriptsUrl() || '/js/',
             version: host.GJS_VERSION ? '?v' + host.GJS_VERSION : '',
             preload: host.GJS_PRELOAD || []
             // libUrl: '/lib/'
@@ -73,39 +46,68 @@
             // for non-ie
         },
         toString = Object.prototype.toString,
-        absoluteReg = /^(?:\/|https?:\/\/|file:\/\/)/,
+        absoluteReg = /^(?:\/|https?:\/\/|file:\/\/\/?)/,
         // validate: http:// or /
         relativeReg = /^\.{1,2}?\//,
         // validate: ./ or ../
+        dirReg = /(\/)[^\/]*$/,
+        // directory regexp
         jsSuffixReg = /\.js(?:(?:\?|#)[\w\W]*)?$/,
         // validate: .js or .js?v=1 or .js#test
         jsSuffix = '.js' + config.version;
 
     function init() {
+        // config.url
+        // url prefix for relative module name
+        //      ./jQuery ==> /js/jQuery.js
+        //      ./post/comment ==> /js/post/comment.js
+        //      ../other ==> /other.js  (!!! not recommend)
+        // but if module is the by another module,
+        // then module name is relative to that module's url not config.url!
+        if (host.GJS_URL) {
+            var gjsUrl = realpath(host.GJS_URL + '/'); // must end with '/'
+            if (gjsUrl.charAt(0) === '/' && gjsUrl.charAt(1) !== '/') {
+                config.url = location.protocol + '//' + location.host + gjsUrl;
+            } else {
+                config.url = gjsUrl;
+            }
+        } else {
+            var scripts = document.getElementsByTagName('script'),
+                node = scripts[scripts.length - 1],
+                loaderScriptUrl;
+
+            loaderScriptUrl = node.hasAttribute ?
+            // non-IE6/7
+            node.src :
+            // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
+            node.getAttribute('src', 4);
+
+            loaderScriptUrl = loaderScriptUrl.replace(/\/[^\/]*$/, '') + '/';
+            config.url = loaderScriptUrl;
+        }
+
+        // config.libUrl
         // url prefix for lib module
         // if url is '/js/' and libUrl is 'lib'
         // then
-        //      ./jQuery ==> /js/jQuery.js
         //      share ==> /js/lib/share.js
-        //      ./post/comment ==> /js/post/comment.js
-        //      ../other ==> /other.js  (!!! not recommend)
         //      /index ==> /index.js
-        //      http://www.guokr.com/js/h.js ==> http://www.guokr.com/js/h.js
         config.libUrl = config.url + (host.GJS_LIB_URL || 'lib/');
-        config.hostUrl = (function() {
-            var httpReg = /^(https?:\/\/[^\/]*)\/?.*$/,
-                fileReg = /^(file:\/\/.*)\/.*$/,
-                tmp;
-            tmp = httpReg.exec(config.url);
-            if (tmp) {
-                return tmp[1];
-            }
-            tmp = fileReg.exec(config.url);
-            if (tmp) {
-                return tmp[1];
-            }
+
+        // config.hostUrl
+        // url prefix for absolute module name start with '/'
+        //      '/index' => '/index.js'
+        var httpReg = /^(https?:\/\/[^\/]*)\/?.*$/,
+            fileReg = /^(file:\/\/.*)\/.*$/,
+            tmp;
+        if ((tmp = httpReg.exec(config.url)) || (tmp = fileReg.exec(config.url))) {
+            config.hostUrl = tmp[1];
+        } else {
             G.log('Can\'t get hostUrl!');
-        })();
+        }
+
+        // if module name start with 'http://' or 'ftp://'
+        //      http://www.guokr.com/js/h.js ==> http://www.guokr.com/js/h.js
     }
 
     /**
@@ -149,13 +151,18 @@
     /**
      * change module name to url of javascript file.
      * @param {string} name
+     * @param {string} relativeUrl
      * @return {string}
      */
 
-    function nameToUrl(name) {
+    function nameToUrl(name, relativeUrl) {
         var r;
         if (relativeReg.test(name)) {
-            name = config.url + name.slice(1);
+            if (relativeUrl) {
+                name = relativeUrl.replace(dirReg, '$1') + name;
+            } else {
+                name = config.url + name;
+            }
         } else if (!(r = absoluteReg.exec(name))) {
             name = config.libUrl + name;
         } else if (r[0] === '/') {
@@ -178,6 +185,7 @@
         var node = doc.createElement('script'),
             head = doc.getElementsByTagName('head')[0];
 
+        // if 404 some browser not fire, like opera(11.5) and IE 6/7/8
         node.onload = node.onerror = node.onreadystatechange = function() {
             if (readyStates[node.readyState]) {
                 if (callback) {
@@ -230,7 +238,7 @@
             // change dependencies name to url
             if (deps) {
                 for (i = 0, l = deps.length; i < l; i++) {
-                    deps[i] = nameToUrl(deps[i]);
+                    deps[i] = nameToUrl(deps[i], name);
                 }
             }
 

@@ -203,6 +203,26 @@
                     expect(a.get()).toEqual('test');
                 });
             });
+
+
+            it('require relative dependencies', function() {
+                var flag = false,
+                    r;
+                runs(function() {
+                    G.req(['relativeDeps'], function(rr) {
+                        r = rr;
+                        flag = true;
+                    });
+                });
+    
+                waitsFor(function() {
+                    return flag;
+                }, 'Timeout', 10000);
+
+                runs(function() {
+                    expect(r).toEqual('test/test.js');
+                });
+            });
         });
 
         // report
