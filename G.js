@@ -16,8 +16,9 @@
 
 (function(host, notDefined) {
     'use strict';
+    var undefinedType = 'undefined';
     // prevent load again
-    if (typeof G !== 'undefined') {
+    if (typeof G !== undefinedType) {
         return;
     }
     host.G = {};
@@ -204,7 +205,7 @@
                     }
                 } catch (x) {}
                 head.removeChild(node);
-                node = notDefined;
+                node = null;
             }
         };
 
@@ -258,11 +259,11 @@
      */
 
     function clearMod(name, callback) {
-        callback.call(null, name);
+        callback.call(notDefined, name);
         if (name in waiting) {
             var wait = waiting[name];
             for (var i = 0, len = wait.length; i < len; i++) {
-                wait[i].call(null, name);
+                wait[i].call(notDefined, name);
             }
             delete waiting[name];
         }
@@ -288,7 +289,7 @@
                     }
                     var depModules = isModsExed(mod.deps);
                     if (depModules) {
-                        module[name] = mod.wrap.apply(null, depModules);
+                        module[name] = mod.wrap.apply(notDefined, depModules);
                         clearMod(name, callback);
                         exed = true;
                     }
@@ -296,7 +297,7 @@
             for (var i = 0, len = mod.deps.length; i < len; i++) {
                 loadMod(mod.deps[i], afterDeps);
             }
-            afterDeps = notDefined;
+            afterDeps = null;
         } else {
             module[name] = mod.wrap.apply();
             clearMod(name, callback);
@@ -333,7 +334,7 @@
     function loadMod(name, callback) {
         // loaded and executed
         if (name in module) {
-            callback.call(null, name);
+            callback.call(notDefined, name);
             return;
         }
         // loading or waitting dependencies
@@ -383,7 +384,7 @@
                     depModules.push(requireSync(depNames[i]));
                 }
             }
-            module[name] = mod.wrap.apply(null, depModules);
+            module[name] = mod.wrap.apply(notDefined, depModules);
             delete loaded[name];
             return module[name];
         } else {
@@ -403,7 +404,7 @@
         if (reqs.length === 1) {
             loadMod(nameToUrl(reqs[0]), function(name) {
                 if (callback.call) {
-                    callback.call(null, module[name]);
+                    callback.call(notDefined, module[name]);
                 }
             });
             // multi module name
@@ -419,7 +420,7 @@
                     var reqsModules = isModsExed(reqs);
                     if (reqsModules) {
                         if (callback.apply) {
-                            callback.apply(null, reqsModules);
+                            callback.apply(notDefined, reqsModules);
                         }
                         exed = true;
                     }
@@ -481,7 +482,7 @@
                     for (; i < l; i++) {
                         preloadCallbacks[i]();
                     }
-                    preloadCallbacks = notDefined;
+                    preloadCallbacks = null;
                 });
             }
             preloadCallbacks.push(function() {
@@ -493,7 +494,7 @@
     /**
      * Use console.log to print log message, or do nothing~
      */
-    if (typeof(console) !== 'undefined' && typeof(console.log) !== 'undefined') {
+    if (typeof(console) !== undefinedType && typeof(console.log) !== undefinedType) {
         G.log = console.log.apply ?
         function() {
             console.log.apply(console, arguments);
