@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>G.js demo page</title>
+</head>
+<body>
+    <h1 id="hello"></h1>
+    <p>Quick start:</p>
+    <pre>
+
+    // ./lib/a.js
+    G.def('a', function() {
+        return 'a';
+    });
+
+    // ./index.html
+    &lt;script src="./G.js"&gt;&lt;/script&gt;
+    G.req('a', function(a) [
+        alert(a === 'a');
+    });
+    </pre>
+    <script src="./G.js"></script>
+    <script>
+    G.req('jQuery', function ($) {
+        $('#hello').text('Welcome to use G.js!');
+    });
+    </script>
+</body>
+</html>
