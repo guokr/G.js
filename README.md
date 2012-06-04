@@ -3,7 +3,7 @@ A small simple javascript lib to help you define and require Module.
 
 #feature
 define & require javascript module like AMDjs. But not exactly follow it.
-Lightweight, about 2kb(Minified and Gzipped)
+Lightweight, about 1.7kb(Minified and Gzipped)
 
 #How to use
 
