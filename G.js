@@ -478,7 +478,7 @@
                     isPreloaded = true;
                     isPreloading = false;
                     var i = 0,
-                        l = config.preload.length;
+                        l = preloadCallbacks.length;
                     for (; i < l; i++) {
                         preloadCallbacks[i]();
                     }
