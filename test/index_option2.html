@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>test G.js option</title>
+</head>
+<body>
+  
+    <link rel="stylesheet" type="text/css" href="jasmine/jasmine.css">
+    <script type="text/javascript" src="jasmine/jasmine.js"></script>
+    <script type="text/javascript" src="jasmine/jasmine-html.js"></script>
+    <script>
+    var GJS_VERSION = '0.2',
+        GJS_PRELOAD = ['GUtils'],
+        GJS_URL = '/test/preloadtest/',
+        GJS_LIB_URL = 'lib2/';
+    </script>
+	<script src="../G.js"></script>
+	<script src="../test/preloadtest/lib2/GUtils.js"></script>
+    <script>
+        describe('G.js:', function() {
+            beforeEach(function() {
+                jasmine.Clock.useMock();
+            });
+
+            it('preload and url and version:', function() {
+                var a,
+                    b,
+                    flag;
+                runs(function() {
+                    G.req(['./a','b'], function(aa, bb) {
+                        a = aa;
+                        b = bb;
+                        flag = true;
+                    });
+                });
+
+                waitsFor(function() {
+                    return flag;
+                }, 'timeout', 10000);
+
+                runs(function() {
+                    a.set(1);
+                    expect(a.get()).toEqual(1);
+                    b.set(2);
+                    expect(b.get()).toEqual(2);
+                    expect($().jquery).toEqual('1.4.4');
+                    expect(G.format).toBeDefined();
+                });
+            });
+        });
+
+        // report
+        var jasmineEnv = jasmine.getEnv();
+        jasmineEnv.updateInterval = 1000;
+        var htmlReporter = new jasmine.HtmlReporter();
+        jasmineEnv.addReporter(htmlReporter);
+        jasmineEnv.specFilter = function(spec) {
+            return htmlReporter.specFilter(spec);
+        };
+        var currentWindowOnload = window.onload;
+        window.onload = function() {
+            if (currentWindowOnload) {
+              currentWindowOnload();
+            }
+            execJasmine();
+        };
+        function execJasmine() {
+            jasmineEnv.execute();
+        }
+    </script>
+    <script>
+    </script>
+</body>
+</html>

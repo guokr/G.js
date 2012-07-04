@@ -282,22 +282,10 @@
         var mod = loaded[name];
         if (mod.deps) {
             // execute module after dependencies
-            var exed = false,
-                afterDeps = function(dep) {
-                    if (exed) {
-                        return;
-                    }
-                    var depModules = isModsExed(mod.deps);
-                    if (depModules) {
-                        module[name] = mod.wrap.apply(notDefined, depModules);
-                        clearMod(name, callback);
-                        exed = true;
-                    }
-                };
-            for (var i = 0, len = mod.deps.length; i < len; i++) {
-                loadMod(mod.deps[i], afterDeps);
-            }
-            afterDeps = null;
+            loadMods(mod.deps, function(depModules) {
+                module[name] = mod.wrap.apply(notDefined, depModules);
+                clearMod(name, callback);
+            });
         } else {
             module[name] = mod.wrap.apply();
             clearMod(name, callback);
@@ -364,6 +352,31 @@
     }
 
     /**
+     * load and execute modules, prevent duplicate load or execute.
+     * @param {string} name
+     * @param {function} callback after all modules execute
+     */
+    function loadMods(names, callback) {
+        // execute module after dependencies
+        var i, len, mods,
+            exed = false,
+            after = function(dep) {
+                if (exed) {
+                    return;
+                }
+                mods = isModsExed(names);
+                if (mods) {
+                    callback(mods);
+                    exed = true;
+                }
+            };
+        for (i = 0, len = names.length; i < len; i++) {
+            loadMod(names[i], after);
+        }
+        after = null;
+    }
+
+    /**
      * Require executed(sync) module.
      * The different from execMod method is it's dependencies must be executed.
      * @param {string} name
@@ -410,28 +423,16 @@
             // multi module name
         } else {
             var i = 0,
-                len = reqs.length,
-                exed = false,
-                // make sure callback only call once
-                cb = function cb() {
-                    if (exed) {
-                        return;
-                    }
-                    var reqsModules = isModsExed(reqs);
-                    if (reqsModules) {
-                        if (callback.apply) {
-                            callback.apply(notDefined, reqsModules);
-                        }
-                        exed = true;
-                    }
-                };
+                len = reqs.length;
             // for IE cache loading bug, must seperate nameToUrl and loadMod!
             for (; i < len; i++) {
                 reqs[i] = nameToUrl(reqs[i]);
             }
-            for (i = 0; i < len; i++) {
-                loadMod(reqs[i], cb);
-            }
+            loadMods(reqs, function(reqsModules) {
+                if (toString.call(callback) === '[object Function]') {
+                    callback.apply(notDefined, reqsModules);
+                }
+            });
         }
     }
 
@@ -472,6 +473,9 @@
             return require(reqs, callback);
             // return when callback === undefined
         } else {
+            preloadCallbacks.push(function() {
+                require(reqs, callback);
+            });
             if (!isPreloading) {
                 isPreloading = true;
                 require(config.preload, function() {
@@ -485,9 +489,6 @@
                     preloadCallbacks = null;
                 });
             }
-            preloadCallbacks.push(function() {
-                require(reqs, callback);
-            });
         }
     };
 
