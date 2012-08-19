@@ -3,7 +3,6 @@
  * A small simple javascript lib to help you define and require Module.
  * Not exactly follow the CommonJS AMDjs.
  * @author mzhou
- * @version 0.3.0
  * @log 0.1
  *      0.2 rebuild the code and api, add nameToUrl rules
  *      0.3 auto find the relativeUrl, add preload support
