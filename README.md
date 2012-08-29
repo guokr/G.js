@@ -172,3 +172,9 @@ for Example:
 You might also want to check the [build tool from guokr](https://github.com/guokr/guokr-build).
 
 Check out the demo.html please!
+
+
+#Licentse
+MIT. Be pleasure to fork and modify it.
+
+
