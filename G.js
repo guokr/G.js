@@ -17,12 +17,12 @@
     'use strict';
     var undefinedType = 'undefined';
     // prevent load again
-    if (typeof G !== undefinedType) {
+    if (typeof host.G !== undefinedType) {
         return;
     }
-    host.G = {};
 
-    var doc = host.document,
+    var G = host.G = {},
+        doc = host.document,
         loading = {},
         // loading modules, or it's dependency is loading
         waiting = {},
