@@ -75,9 +75,7 @@ LibUrl是baseUrl+'/lib/',你可以通过全局变量GJS_LIBURL来设置。此路
 
 HostUrl是 location.protocol + '//' + location.host，如果它是一个本地文件，则是baseUrl。
 
-例如:
-
-Lib url规则
+例如Lib url规则:
 
     http://guokr.com/     (filepath: ~/guokr/G/)
                     G.js
@@ -89,6 +87,8 @@ Lib url规则
                     index.html
                     e.js
                     c.js
+
+注意：URL路径http://guokr.com/lib/对应的文件夹~/guokr/G/。
 
 ####Lib路径规则:
 
@@ -132,7 +132,7 @@ BaseUrl是'http://guokr.com/'，局部模块的名字是相对于baseUrl的。
         return c === 'c';   // true
     });
 
-c.js与b.js是全局模块。依赖模块时，相对路径名是依据当前模块的路径来计算的，不是BaseUrl。
+c.js与b.js是全局模块。设置依赖模块时，相对路径名是依据当前模块的路径来计算的，不是BaseUrl。
 
 ####绝对路径规则:
 模块名必须是以'/'、'http://'、'https://'或'file://'开头的。
@@ -167,10 +167,10 @@ e.js是一个绝对模块名
 ###配置和预加载
 
     <script>
-    var GJS_VERSION = '0.2',    // will be prepend to javascript file url
-        GJS_PRELOAD = ['preloadModuleName'],
-        GJS_URL = '/js/',
-        GJS_LIB_URL = 'lib/';
+    var GJS_VERSION = '0.2',                 // 如果有，则此参数会被加到所有javascript文件请求的后面
+        GJS_PRELOAD = ['preloadModuleName'], // 预先加载的模块
+        GJS_URL = '/js/',                    // 设置BaseURL 为 /js/
+        GJS_LIB_URL = 'lib/';                // 设置LibURL 为 /js/lib/
     </script>
     <script>
     (function() {

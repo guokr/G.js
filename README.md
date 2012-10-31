@@ -93,6 +93,8 @@ Lib url rules
                     e.js
                     c.js
 
+NOTE：http://guokr.com/lib/ is mapped to directory ~/guokr/G/。
+
 ####Lib url rules:
 
 LibUrl is 'http://guokr.com/lib/'.
