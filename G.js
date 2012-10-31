@@ -8,6 +8,7 @@
  *      0.3 auto find the relativeUrl, add preload support
  *      0.4 fix module name resolved bug
  *      0.5 add relative deps name support
+ *      0.5.1 add local var G
  */
 
 /*jshint undef:true, browser:true, noarg:true, curly:true, regexp:true, newcap:true, trailing:true, noempty:true, regexp:false, strict:true, evil:true, funcscope:true, iterator:true, loopfunc:true, multistr:true, boss:true, eqnull:true, eqeqeq:true, undef:true */

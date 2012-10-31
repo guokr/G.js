@@ -1,14 +1,13 @@
 #G.js
-A small simple javascript lib to help you define and require Module.
+一个帮助你require和define javscript模块的库。
 
-[中文版文档](https://github.com/guokr/G.js/blob/master/README.zh_cn.md)
+#特点
 
-#feature
-define & require javascript module like AMDjs. But not exactly follow it.
+1. 类AMDjs语法；
+2. define 和 require javascript模块；
+3. 只有1.7kb大小（Minified and Gzipped）
 
-Lightweight, about 1.7kb(Minified and Gzipped)
-
-#How to use
+#如何使用
 
     <h1 id="hello"></h1>
     <script src="./G.js"></script>
@@ -19,32 +18,32 @@ Lightweight, about 1.7kb(Minified and Gzipped)
     </script>
 
 #API
-Make sure one javascript file contains only one javascript module!
+确保一个javascript文件只有一个模块
 
-##Define a Module
+##定义一个模块
 
-###Define a Module as a Function
+###函数
 
     // file: lib/a.js
     G.def('a', function() {
         return 'a'; // G.req('a') === 'a';
     });
 
-###Define a Module as a simple object
+###对象
 
     // file: lib/b.js
     G.def('b', {
         name: 'b'
     });
 
-###Define a Module with Dependencies
+###添加依赖
 
     // file: lib/c.js
     G.def('c', ['a', 'b'], function (a, b) {
         return a + b.name; // G.req('c') === 'ab';
     });
 
-###Require a Module Asynchronously
+###异步的require一个模块
 
     // file: demo.html
     <script src="./G.js"></script>
@@ -54,7 +53,7 @@ Make sure one javascript file contains only one javascript module!
     });
     </script>
 
-###Require a Module Synchronously
+###同步的require一个模块
 
     // file: demo2.html
     <script src="./G.js"></script>
@@ -68,19 +67,17 @@ Make sure one javascript file contains only one javascript module!
     );
     </script>
 
-###Module name and url rules
+###模块名和路径的命名规则
 
-BaseUrl is directory of G.js, or you can set it by a global variable: GJS_URL.
+BaseUrl是G.js文件所处路径，你也可以通过全局变量GJS_URL来设置。
 
-LibUrl is baseUrl+'/lib/', or you can set it by a global variable: GJS_LIBURL.
+LibUrl是baseUrl+'/lib/',你可以通过全局变量GJS_LIBURL来设置。此路径通常用来放置javascript的基础模块（或称全局模块）。
 
-HostUrl is location.protocol + '//' + location.host.
+HostUrl是 location.protocol + '//' + location.host，如果它是一个本地文件，则是baseUrl。
 
-if it is a local file, then hostUrl is directory of baseUrl.
+例如:
 
-Supposing files like this:
-
-Lib url rules
+Lib url规则
 
     http://guokr.com/     (filepath: ~/guokr/G/)
                     G.js
@@ -93,44 +90,41 @@ Lib url rules
                     e.js
                     c.js
 
-####Lib url rules:
+####Lib路径规则:
 
-LibUrl is 'http://guokr.com/lib/'.
+LibUrl是'http://guokr.com/lib/'，全局模块的名字是相对于libUrl的。
 
-Lib Module name is relative to libUrl.
-
-~/guokr/G/lib/a.js is a lib module:
+~/guokr/G/lib/a.js 是一个全局模块:
     
     G.def('a', function() {
         return 'a';
     });
 
-~/guokr/G/lib/other/d.js is a lib module:
+~/guokr/G/lib/other/d.js是一个全局模块:
 
     G.def('other/d', function() {
         return 'other/d';
     });
 
-####Relative url rules:
+####相对路径规则:
 
-BaseUrl is 'http://guokr.com/'.
+BaseUrl是'http://guokr.com/'，局部模块的名字是相对于baseUrl的。
 
-Relative Module name is relative to baseUrl.
-
-~/guokr/G/c.js is a relative module:
+~/guokr/G/c.js是一个局部模块:
     
     G.def('./c.js', function() {
         return './c';
     });
 
-####Relative Dependencies module name is different:
+####使用相对路径来依赖模块:
 
-For example:
+例如:
 
     //filename: ~/guokr/G/lib/c.js
     G.def('c', function() {
         return 'c';
     });
+
 
     //filename: ~/guokr/G/lib/b.js
     G.def('b', ['./c'], function( c ) {
@@ -138,38 +132,39 @@ For example:
         return c === 'c';   // true
     });
 
-####Absolute url rules:
-Module name start with '/' or 'http://' or 'https://' or 'file://'.
+c.js与b.js是全局模块。依赖模块时，相对路径名是依据当前模块的路径来计算的，不是BaseUrl。
 
-if start with '/', for example:
+####绝对路径规则:
+模块名必须是以'/'、'http://'、'https://'或'file://'开头的。
 
-e.js is a absolute module name
+如果以'/'开头，例如:
+
+e.js是一个绝对模块名
 
     G.def('/e', {
         name: 'e'
     });
 
-NOTE: Because of hostUrl is different between online(http://) and offline(file://), absolute module name which start with '/' is not recommended; 
+注意：hostUrl是在online和offline的时候不一样，所以使用'/'开头的模块名是不推荐的。推荐使用相对路径名;
 
-You can use relative module name instead;
+如果模块名以'http://'、'https://'或'file://'开头。
 
-if start with 'http://' or 'https://' or 'file://'.
+例如：
 
-e.js for example:
-
+    // e.js
     G.def('http://guokr.com/e.js', function() {
         return 'e';
     });
 
-NOTE: Although a module can be named many ways, you can require them by any kind of name;
+注意：虽然一个模块可以被命名成很多情况，你也可以用各种情况来require它们。
 
-for Example:
+例如:
 
     G.req('./lib/a.js', function (a) {
         return a === 'a'; // true
     });
 
-###Config and preload
+###配置和预加载
 
     <script>
     var GJS_VERSION = '0.2',    // will be prepend to javascript file url
@@ -190,12 +185,13 @@ for Example:
     })();
     </script>
 
-#Other
-You might also want to check the [build tool from guokr](https://github.com/guokr/guokr-build).
+#其他
+你可以看下我们的build工具：[build tool from guokr](https://github.com/guokr/guokr-build).
 
-Check out the demo.html please!
+也请查看下demo.html~
+
 
 #Licentse
-MIT. Be pleasure to fork and modify it.
+MIT.
 
 
