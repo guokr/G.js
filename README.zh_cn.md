@@ -88,11 +88,11 @@ HostUrl是 location.protocol + '//' + location.host，如果它是一个本地�
                     e.js
                     c.js
 
-注意：URL路径http://guokr.com/lib/对应的文件夹~/guokr/G/。
+注意：URL路径 http://guokr.com/lib/ 对应的文件夹~/guokr/G/。
 
 ####Lib路径规则:
 
-LibUrl是'http://guokr.com/lib/'，全局模块的名字是相对于libUrl的。
+LibUrl是 'http://guokr.com/lib/' ，全局模块的名字是相对于libUrl的。
 
 ~/guokr/G/lib/a.js 是一个全局模块:
     
@@ -108,7 +108,7 @@ LibUrl是'http://guokr.com/lib/'，全局模块的名字是相对于libUrl的。
 
 ####相对路径规则:
 
-BaseUrl是'http://guokr.com/'，局部模块的名字是相对于baseUrl的。
+BaseUrl是 'http://guokr.com/' ，局部模块的名字是相对于baseUrl的。
 
 ~/guokr/G/c.js是一个局部模块:
     
